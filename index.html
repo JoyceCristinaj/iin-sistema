@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Gestão de Núcleos • IIN</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <header class="hero">
+      <div class="brand">
+        <img src="logo.png" alt="Logo Instituto Irmãos Nogueira" class="logo" />
+        <div class="brand-text">
+          <p class="eyebrow">Instituto Irmãos Nogueira</p>
+          <h1>Sistema de Gestão de Núcleos</h1>
+          <p class="sub">Presença • Matrículas • Relatórios • Visitantes • Dashboard</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- LOGIN -->
+      <section id="loginScreen" class="panel login-screen">
+        <h2>Acesso ao sistema</h2>
+        <form id="loginForm" class="login-form">
+          <label>Usuário
+            <input id="loginUsername" type="text" required autocomplete="username" />
+          </label>
+
+          <label>Senha
+            <input id="loginPassword" type="password" required autocomplete="current-password" />
+          </label>
+
+          <label>Projeto
+            <select id="loginProject" required>
+              <option value="light">Light</option>
+              <option value="enel">Enel</option>
+              <option value="supergasbras">Supergasbras</option>
+            </select>
+          </label>
+
+          <button type="submit" class="primary">Entrar</button>
+        </form>
+
+        <p id="loginMessage" class="report-status">Use seu usuário e senha para liberar o sistema.</p>
+      </section>
+
+      <!-- APP -->
+      <section id="appShell" class="hidden">
+        <!-- TOPBAR -->
+        <section class="panel topbar">
+          <div class="panel-title-row">
+            <div class="stack">
+              <h2 id="welcomeTitle">Painel</h2>
+              <p id="projectSubtitle" class="muted"></p>
+            </div>
+
+            <div class="toolbar">
+              <button id="logoutBtn" type="button" class="ghost">Sair</button>
+            </div>
+          </div>
+
+          <!-- TABS -->
+          <div class="tabs" id="tabsBar">
+            <button class="tab-btn active" data-tab="tab-dashboard">Dashboard</button>
+            <button class="tab-btn" data-tab="tab-professor">Professor</button>
+            <button class="tab-btn" data-tab="tab-gestao">Gestão</button>
+            <button class="tab-btn" data-tab="tab-relatorios">Relatórios</button>
+            <button class="tab-btn" data-tab="tab-admin">Admin</button>
+          </div>
+        </section>
+
+        <!-- DASHBOARD -->
+        <section id="tab-dashboard" class="tab-page">
+          <section class="panel">
+            <div class="panel-title-row">
+              <h2>Dashboard</h2>
+              <span class="badge" id="dashBadge">-</span>
+            </div>
+
+            <div class="dash-grid">
+              <article class="panel metrics">
+                <article><h2 id="totalStudents">0</h2><p>Alunos cadastrados</p></article>
+                <article><h2 id="presentCount">0</h2><p>Presentes</p></article>
+                <article><h2 id="absentCount">0</h2><p>Faltas</p></article>
+                <article><h2 id="uniformDelivered">0</h2><p>Kits entregues</p></article>
+              </article>
+
+              <article class="panel">
+                <div class="panel-title-row">
+                  <h3>Alunos por núcleo</h3>
+                  <span class="badge" id="nucleusCountBadge">0 núcleos</span>
+                </div>
+                <div id="nucleusCounts" class="chips"></div>
+                <p class="muted">Total por núcleo no projeto selecionado.</p>
+              </article>
+
+              <article class="panel">
+                <div class="panel-title-row">
+                  <h3>Presença por núcleo (última chamada)</h3>
+                  <select id="dashNucleusFilter" class="ghost"></select>
+                </div>
+                <canvas id="dashChart" class="chart" width="900" height="380"></canvas>
+                <p class="muted">Gráfico simples (sem biblioteca). Usa os status atuais + staff da aula.</p>
+              </article>
+            </div>
+          </section>
+        </section>
+
+        <!-- PROFESSOR -->
+        <section id="tab-professor" class="tab-page hidden">
+          <section id="professorArea" class="panel">
+            <div class="panel-title-row">
+              <h2>Área do Professor</h2>
+              <span id="professorNucleusBadge" class="badge">Turma</span>
+            </div>
+
+            <section class="staff-panel">
+              <div class="panel-title-row">
+                <h3>Chamada da turma</h3>
+                <div class="toolbar">
+                  <button id="endClassBtn" type="button" class="primary">Encerrar aula</button>
+                </div>
+              </div>
+
+              <h4>Professor e monitor da aula</h4>
+              <div class="grid-form">
+                <label>Data da aula <input id="professorClassDate" type="date" /></label>
+                <label>Turma (horário) <input id="professorClassSchedule" type="text" placeholder="Ex: 18:00 às 19:00" /></label>
+                <label>Professor <input id="professorClassProfessorName" type="text" placeholder="Digite o nome" /></label>
+                <label>Monitor <input id="professorClassMonitorName" type="text" placeholder="Digite o nome" /></label>
+              </div>
+
+              <div class="toolbar">
+                <button id="professorClassSave" type="button" class="small-btn">Salvar dados da aula</button>
+                <span id="classLockBadge" class="badge hidden">Aula encerrada</span>
+              </div>
+
+              <p id="professorClassStatus" class="report-status">Preencha a data da aula e salve antes de marcar presença.</p>
+            </section>
+
+            <section class="panel">
+              <div class="panel-title-row">
+                <h3>Lista da turma (com frequência)</h3>
+                <div class="toolbar">
+                  <input id="attendanceSearch" class="search" type="search" placeholder="Buscar aluno..." />
+                </div>
+              </div>
+              <div id="professorBoard" class="board-grid"></div>
+            </section>
+
+            <section class="panel">
+              <h3>Planejamento semanal (somente professor)</h3>
+              <form id="planningForm" class="grid-form">
+                <label>Semana (início) <input id="planningWeek" type="date" required /></label>
+                <label>Tema da semana <input id="planningTheme" type="text" required placeholder="Tema principal" /></label>
+                <label>Momento do Mestre <input id="planningGoals" type="text" placeholder="O que foi dito na aula" /></label>
+                <label>Atividades planejadas <input id="planningActivities" type="text" placeholder="Aula técnica, treino..." /></label>
+                <button class="primary" type="submit">Salvar planejamento</button>
+              </form>
+              <ul id="planningList" class="history-list"></ul>
+            </section>
+
+            <section class="panel">
+              <h3>Histórico da turma</h3>
+              <label>Filtrar histórico por data <input id="professorHistoryDate" type="date" /></label>
+              <ul id="professorHistory" class="history-list"></ul>
+            </section>
+          </section>
+        </section>
+
+        <!-- GESTÃO -->
+        <section id="tab-gestao" class="tab-page hidden">
+          <section id="managementArea" class="role-grid">
+            <section class="panel controls">
+              <h2>Inscrições e matrículas</h2>
+
+              <form id="studentForm" class="grid-form">
+                <label>Nome <input id="studentName" type="text" required /></label>
+                <label>Data de nascimento <input id="studentBirthDate" type="date" /></label>
+                <label>Turma/Núcleo <select id="studentNucleus" required></select></label>
+                <label>Horário da turma <select id="studentSchedule"></select></label>
+                <label>Modalidade <select id="studentModality"></select></label>
+                <label>Contato do aluno <input id="studentContact" type="text" placeholder="(DDD) 9xxxx-xxxx" /></label>
+
+                <!-- RESPONSÁVEL -->
+                <label>Responsável (nome) <input id="guardianName" type="text" placeholder="Ex: Mãe/Pai/Responsável" /></label>
+                <label>Responsável (telefone) <input id="guardianPhone" type="text" placeholder="(DDD) 9xxxx-xxxx" /></label>
+                <label>Responsável (e-mail) <input id="guardianEmail" type="email" placeholder="email@exemplo.com" /></label>
+
+                <!-- ESCOLA -->
+                <label>Escola (nome) <input id="studentSchoolName" type="text" placeholder="Nome da escola" /></label>
+                <label>Escola (tipo)
+                  <select id="studentSchoolType">
+                    <option value="">Selecione</option>
+                    <option value="estadual">Estadual</option>
+                    <option value="municipal">Municipal</option>
+                    <option value="federal">Federal</option>
+                    <option value="militar">Militar</option>
+                    <option value="particular">Particular</option>
+                  </select>
+                </label>
+
+                <!-- ENDEREÇO -->
+                <label>Rua <input id="addrStreet" type="text" placeholder="Rua/Av..." /></label>
+                <label>Número <input id="addrNumber" type="text" placeholder="Nº" /></label>
+                <label>Bairro <input id="addrDistrict" type="text" placeholder="Bairro" /></label>
+                <label>CEP <input id="addrZip" type="text" placeholder="00000-000" /></label>
+                <label>Complemento <input id="addrComplement" type="text" placeholder="Apto, bloco, referência..." /></label>
+
+                <!-- TAMANHOS UNIFORME -->
+                <label>Tamanho camiseta
+                  <select id="sizeShirt">
+                    <option value="">Selecione</option>
+                    <option>6 anos</option><option>8 anos</option><option>10 anos</option><option>12 anos</option><option>14 anos</option>
+                    <option>PP</option><option>P</option><option>M</option><option>G</option><option>GG</option><option>XXG</option>
+                  </select>
+                </label>
+
+                <label>Tamanho short
+                  <select id="sizeShort">
+                    <option value="">Selecione</option>
+                    <option>6 anos</option><option>8 anos</option><option>10 anos</option><option>12 anos</option><option>14 anos</option>
+                    <option>PP</option><option>P</option><option>M</option><option>G</option><option>GG</option><option>XXG</option>
+                  </select>
+                </label>
+
+                <label>Tamanho kimono
+                  <select id="sizeKimono">
+                    <option value="">Selecione</option>
+                    <option>M0</option><option>M1</option><option>M2</option><option>M3</option><option>M4</option>
+                    <option>A0</option><option>A1</option><option>A2</option><option>A3</option><option>A4</option><option>A5</option>
+                    <option>AG</option>
+                  </select>
+                </label>
+
+                <label>Data de início <input id="studentStartDate" type="date" /></label>
+                <label>Requisitos <input id="studentRequirements" type="text" placeholder="Atestado, autorização..." /></label>
+
+                <button class="primary" type="submit">Adicionar aluno</button>
+              </form>
+            </section>
+
+            <section class="panel" id="visitorsPanel">
+              <div class="panel-title-row">
+                <h2>Alunos visitantes</h2>
+                <span class="badge" id="visitorsBadge">0</span>
+              </div>
+
+              <form id="visitorForm" class="grid-form">
+                <label>Nome do visitante <input id="visitorName" type="text" required /></label>
+                <label>Núcleo <select id="visitorNucleus" required></select></label>
+                <label>Data da visita <input id="visitorDate" type="date" required /></label>
+                <label>Contato <input id="visitorContact" type="text" placeholder="(DDD) 9xxxx-xxxx" /></label>
+                <label>Observação <input id="visitorNotes" type="text" placeholder="Ex: veio testar a aula" /></label>
+                <button class="primary" type="submit">Cadastrar visitante</button>
+              </form>
+
+              <ul id="visitorsList" class="history-list"></ul>
+            </section>
+
+            <section class="panel">
+              <h2>Calendário de aulas por núcleo</h2>
+              <form id="classCalendarForm" class="grid-form calendar-compact">
+                <label>Núcleo <select id="calendarNucleus" required></select></label>
+                <label>Dia de aula <input id="calendarDate" type="date" /></label>
+
+                <div class="calendar-box">
+                  <p>Horários da turma (até 6 faixas)</p>
+                  <div class="grid-form calendar-slots">
+                    <label>Horário 1 (início) <input id="calendarStartTime1" type="time" /></label>
+                    <label>Horário 1 (fim) <input id="calendarEndTime1" type="time" /></label>
+                    <label>Horário 2 (início) <input id="calendarStartTime2" type="time" /></label>
+                    <label>Horário 2 (fim) <input id="calendarEndTime2" type="time" /></label>
+                    <label>Horário 3 (início) <input id="calendarStartTime3" type="time" /></label>
+                    <label>Horário 3 (fim) <input id="calendarEndTime3" type="time" /></label>
+                    <label>Horário 4 (início) <input id="calendarStartTime4" type="time" /></label>
+                    <label>Horário 4 (fim) <input id="calendarEndTime4" type="time" /></label>
+                    <label>Horário 5 (início) <input id="calendarStartTime5" type="time" /></label>
+                    <label>Horário 5 (fim) <input id="calendarEndTime5" type="time" /></label>
+                    <label>Horário 6 (início) <input id="calendarStartTime6" type="time" /></label>
+                    <label>Horário 6 (fim) <input id="calendarEndTime6" type="time" /></label>
+                  </div>
+                </div>
+
+                <button class="primary" type="submit">Salvar aula / horários</button>
+              </form>
+
+              <div id="classCalendarBoard" class="calendar-grid"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-title-row">
+                <h2>Relatório em tempo real da chamada</h2>
+                <div class="toolbar">
+                  <select id="attendanceNucleusFilter"></select>
+                </div>
+              </div>
+              <div id="attendanceReportBoard" class="board-grid"></div>
+            </section>
+
+            <section class="panel">
+              <h2>Alertas de frequência irregular</h2>
+              <ul id="alertsBoard" class="history-list"></ul>
+            </section>
+
+            <section class="panel">
+              <div class="panel-title-row">
+                <h2>Distribuição de kits</h2>
+                <select id="uniformNucleusFilter"></select>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Aluno</th><th>Núcleo</th><th>Modalidade</th><th>Itens do kit</th>
+                      <th>Selecionar item entregue</th><th>Ação</th><th>Excluir</th>
+                    </tr>
+                  </thead>
+                  <tbody id="uniformTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <h2>Controle de estoque</h2>
+              <div id="stockView" class="stock-grid"></div>
+            </section>
+
+            <section class="panel">
+              <h2>Comunicação integrada (WhatsApp)</h2>
+              <form id="whatsForm" class="grid-form">
+                <label>Aluno <select id="whatsStudent"></select></label>
+                <label>Mensagem <input id="whatsMessage" type="text" placeholder="Aviso, lembrete..." /></label>
+                <button class="primary" type="submit">Abrir WhatsApp</button>
+              </form>
+              <p id="whatsStatus" class="report-status">Selecione um aluno para enviar mensagem.</p>
+            </section>
+          </section>
+        </section>
+
+        <!-- RELATÓRIOS -->
+        <section id="tab-relatorios" class="tab-page hidden">
+          <section class="panel report-panel">
+            <div class="panel-title-row">
+              <h2>Relatórios</h2>
+              <div class="report-controls">
+                <select id="adminReportNucleusFilter">
+                  <option value="todos">Todos os núcleos</option>
+                </select>
+                <select id="adminReportPeriod">
+                  <option value="diario">Diário</option>
+                  <option value="semanal" selected>Semanal</option>
+                  <option value="mensal">Mensal</option>
+                  <option value="trimestral">Trimestral</option>
+                  <option value="semestral">Semestral</option>
+                  <option value="anual">Anual</option>
+                </select>
+                <button id="adminGenerateReportBtn" class="primary" type="button">📄 Baixar TXT</button>
+                <button id="adminPrintReportBtn" class="ghost" type="button">🖨️ Imprimir / Salvar PDF</button>
+              </div>
+            </div>
+
+            <p id="adminReportRangeInfo" class="report-status">Período selecionado: -</p>
+            <p id="adminReportStatus" class="report-status">
+              Dica: para PDF, clique em “Imprimir / Salvar PDF” e escolha “Salvar em PDF”.
+            </p>
+          </section>
+        </section>
+
+        <!-- ADMIN -->
+        <section id="tab-admin" class="tab-page hidden">
+          <section id="adminArea" class="panel">
+            <h2>Administrador • Usuários e permissões</h2>
+
+            <form id="userForm" class="grid-form">
+              <label>Usuário <input id="newUsername" type="text" required /></label>
+              <label>Senha <input id="newPassword" type="password" required /></label>
+              <label>Perfil
+                <select id="newRole">
+                  <option value="professor">Professor</option>
+                  <option value="gestao">Gestão Interna</option>
+                  <option value="admin">Administrador</option>
+                </select>
+              </label>
+              <label>Núcleo (professor) <select id="newNucleus"></select></label>
+              <button class="primary" type="submit">Criar usuário</button>
+            </form>
+
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr><th>Usuário</th><th>Perfil</th><th>Núcleo</th><th>Senha</th><th>Ações</th></tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
+
+            <h3>Reposição / ajuste de estoque</h3>
+            <form id="stockForm" class="grid-form">
+              <label>Item
+                <select id="stockSize">
+                  <option value="camiseta">Camiseta</option>
+                  <option value="shorts">Shorts</option>
+                  <option value="kimono">Kimono</option>
+                  <option value="bandagem">Bandagem</option>
+                  <option value="protetor_bucal">Protetor bucal</option>
+                </select>
+              </label>
+              <label>Quantidade (+/-) <input id="stockDelta" type="number" value="0" /></label>
+              <button class="primary" type="submit">Aplicar ajuste</button>
+            </form>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <template id="attendanceCardTemplate">
+      <article class="student-card">
+        <div class="student-top">
+          <h4 class="student-name"></h4>
+          <span class="freq-pill" title="Frequência do aluno">—</span>
+        </div>
+        <p class="student-contact"></p>
+        <p class="student-class-info"></p>
+        <p class="student-status"></p>
+        <div class="card-buttons">
+          <button class="btn-present" type="button">Presente</button>
+          <button class="btn-absent" type="button">Falta</button>
+          <button class="btn-justified" type="button">Justificado</button>
+        </div>
+        <p class="card-hint muted">A frequência calcula automaticamente com base nas chamadas registradas.</p>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
